@@ -1,3 +1,5 @@
+
+
 pipeline {
     // run on jenkins nodes tha has java 8 label
     agent any
@@ -11,11 +13,11 @@ pipeline {
             steps {
                 // Run the maven build
                 script {
-                    // Get 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the Maven tool.
+                    // Get the Maven tool.
                     // ** NOTE: This 'M3' Maven tool must be configured
                     // **       in the global configuration.
                     echo 'Pulling... master'
-                    def mvnHome = tool 'Maven 3.6.0'
+                    def mvnHome = tool 'Maven 3.3.0'
                     if (isUnix()) {
                         def targetVersion = getDevVersion()
                         print 'target build version...'
@@ -37,6 +39,23 @@ pipeline {
                     }
                 }
 
+            }
+        }
+        stage('Integration tests') {
+            // Run integration test
+            steps {
+                script {
+                    def mvnHome = tool 'Maven 3.6.0'
+                    if (isUnix()) {
+                        // just to trigger the integration test without unit testing
+                        sh "'${mvnHome}/bin/mvn'  verify -Dunit-tests.skip=true"
+                    } else {
+                        bat(/"${mvnHome}\bin\mvn" verify -Dunit-tests.skip=true/)
+                    }
+
+                }
+                // cucumber reports collection
+                cucumber buildStatus: null, fileIncludePattern: '**/cucumber.json', jsonReportDirectory: 'target', sortingMethod: 'ALPHABETICAL'
             }
         }
         stage('Sonar scan execution') {
@@ -81,7 +100,7 @@ pipeline {
                                 // replace it with your application name or make it easily loaded from pom.xml
                                 def jarName = "application-${developmentArtifactVersion}.jar"
                                 echo "the application is deploying ${jarName}"
-                                // NOTE : CREATE your deployemnt JOB, where it can take parameters which is the jar name to fetch from jenkins workspace
+                                // NOTE : CREATE your deployemnt JOB, where it can take parameters whoch is the jar name to fetch from jenkins workspace
                                 build job: 'ApplicationToDev', parameters: [[$class: 'StringParameterValue', name: 'jarName', value: jarName]]
                                 echo 'the application is deployed !'
                             } else {
@@ -93,7 +112,7 @@ pipeline {
                 }
             }
         }
-/*        stage('DEV sanity check') {
+        stage('DEV sanity check') {
             steps {
                 // give some time till the deployment is done, so we wait 45 seconds
                 sleep(45)
@@ -101,7 +120,7 @@ pipeline {
                     if (currentBuild.result == null || currentBuild.result == 'SUCCESS') {
                         timeout(time: 1, unit: 'MINUTES') {
                             script {
-                                def mvnHome = tool 'Maven 3.5.2'
+                                def mvnHome = tool 'Maven 3.6.0'
                                 //NOTE : if u change the sanity test class name , change it here as well
                                 sh "'${mvnHome}/bin/mvn' -Dtest=ApplicationSanityCheck_ITT surefire:test"
                             }
@@ -110,7 +129,7 @@ pipeline {
                     }
                 }
             }
-        }*/
+        }
         stage('Release and publish artifact') {
             when {
                 // check if branch is master
@@ -127,8 +146,8 @@ pipeline {
                             echo "Building version ${v} - so released version is ${releasedVersion}"
                         }
                         // jenkins user credentials ID which is transparent to the user and password change
-                            sh "git tag -f v${v}"
-                            sh "git push -f --tags"
+                        sh "git tag -f v${v}"
+                        sh "git push -f --tags"
                         sh "'${mvnHome}/bin/mvn' -Dmaven.test.skip=true  versions:set  -DgenerateBackupPoms=false -DnewVersion=${v}"
                         sh "'${mvnHome}/bin/mvn' -Dmaven.test.skip=true clean deploy"
 
@@ -138,7 +157,7 @@ pipeline {
                 }
             }
         }
-  /*      stage('Deploy to Acceptance') {
+        stage('Deploy to Acceptance') {
             when {
                 // check if branch is master
                 branch 'master'
@@ -192,7 +211,7 @@ pipeline {
                 }
             }
         }
-    }*/
+    }
     post {
         // Always runs. And it runs before any of the other post conditions.
         always {
@@ -221,7 +240,6 @@ pipeline {
         timeout(time: 25, unit: 'MINUTES')
     }
 
-}
 }
 def developmentArtifactVersion = ''
 def releasedVersion = ''
@@ -278,5 +296,4 @@ def getReleaseVersion() {
         versionNumber = gitCommit.take(8);
     }
     return pom.version.replace("-SNAPSHOT", ".${versionNumber}")
-}
 }
