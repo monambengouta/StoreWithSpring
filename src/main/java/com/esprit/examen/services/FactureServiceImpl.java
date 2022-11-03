@@ -2,6 +2,7 @@ package com.esprit.examen.services;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ public class FactureServiceImpl implements IFactureService {
 	
 	@Override
 	public List<Facture> retrieveAllFactures() {
-		List<Facture> factures = (List<Facture>) factureRepository.findAll();
+		List<Facture> factures = factureRepository.findAll();
 		for (Facture facture : factures) {
 			log.info(" facture : " + facture);
 		}
@@ -58,20 +59,25 @@ public class FactureServiceImpl implements IFactureService {
 		float montantFacture = 0;
 		float montantRemise = 0;
 		for (DetailFacture detail : detailsFacture) {
-			//Récuperer le produit 
-			Produit produit = produitRepository.findById(detail.getProduit().getIdProduit()).get();
-			//Calculer le montant total pour chaque détail Facture
-			float prixTotalDetail = detail.getQteCommandee() * produit.getPrix();
-			//Calculer le montant remise pour chaque détail Facture
-			float montantRemiseDetail = (prixTotalDetail * detail.getPourcentageRemise()) / 100;
-			float prixTotalDetailRemise = prixTotalDetail - montantRemiseDetail;
-			detail.setMontantRemise(montantRemiseDetail);
-			detail.setPrixTotalDetail(prixTotalDetailRemise);
-			//Calculer le montant total pour la facture
-			montantFacture = montantFacture + prixTotalDetailRemise;
-			//Calculer le montant remise pour la facture
-			montantRemise = montantRemise + montantRemiseDetail;
-			detailFactureRepository.save(detail);
+			try{    //Récuperer le produit
+				Optional<Produit> produitopt = produitRepository.findById(detail.getProduit().getIdProduit());
+				Produit produit = (Produit) new Object();
+				if (produitopt.isPresent()) produit = produitopt.get();
+				//Calculer le montant total pour chaque détail Facture
+				float prixTotalDetail = detail.getQteCommandee() * produit.getPrix();
+				//Calculer le montant remise pour chaque détail Facture
+				float montantRemiseDetail = (prixTotalDetail * detail.getPourcentageRemise()) / 100;
+				float prixTotalDetailRemise = prixTotalDetail - montantRemiseDetail;
+				detail.setMontantRemise(montantRemiseDetail);
+				detail.setPrixTotalDetail(prixTotalDetailRemise);
+				//Calculer le montant total pour la facture
+				montantFacture = montantFacture + prixTotalDetailRemise;
+				//Calculer le montant remise pour la facture
+				montantRemise = montantRemise + montantRemiseDetail;
+				detailFactureRepository.save(detail);
+			}catch (Exception e){
+				log.error("null Pointer Exception");
+			}
 		}
 		f.setMontantFacture(montantFacture);
 		f.setMontantRemise(montantRemise);
@@ -81,7 +87,6 @@ public class FactureServiceImpl implements IFactureService {
 	@Override
 	public void cancelFacture(Long factureId) {
 		// Méthode 01
-		//Facture facture = factureRepository.findById(factureId).get();
 		Facture facture = factureRepository.findById(factureId).orElse(new Facture());
 		facture.setArchivee(true);
 		factureRepository.save(facture);
@@ -99,14 +104,18 @@ public class FactureServiceImpl implements IFactureService {
 
 	@Override
 	public List<Facture> getFacturesByFournisseur(Long idFournisseur) {
-		Fournisseur fournisseur = fournisseurRepository.findById(idFournisseur).orElse(null);
+		Optional<Fournisseur> fournisseuropt = fournisseurRepository.findById(idFournisseur);
+		Fournisseur fournisseur = (Fournisseur) new Object();
+		if(fournisseuropt.isPresent()){
+			fournisseur= fournisseuropt.get();
+		}
 		return (List<Facture>) fournisseur.getFactures();
 	}
 
 	@Override
 	public void assignOperateurToFacture(Long idOperateur, Long idFacture) {
 		Facture facture = factureRepository.findById(idFacture).orElse(null);
-		Operateur operateur = operateurRepository.findById(idOperateur).orElse(null);
+		Operateur operateur = operateurRepository.findById(idOperateur).orElse((Operateur) new Object());
 		operateur.getFactures().add(facture);
 		operateurRepository.save(operateur);
 	}
@@ -115,8 +124,7 @@ public class FactureServiceImpl implements IFactureService {
 	public float pourcentageRecouvrement(Date startDate, Date endDate) {
 		float totalFacturesEntreDeuxDates = factureRepository.getTotalFacturesEntreDeuxDates(startDate,endDate);
 		float totalRecouvrementEntreDeuxDates =reglementService.getChiffreAffaireEntreDeuxDate(startDate,endDate);
-		float pourcentage=(totalRecouvrementEntreDeuxDates/totalFacturesEntreDeuxDates)*100;
-		return pourcentage;
+		return (totalRecouvrementEntreDeuxDates/totalFacturesEntreDeuxDates)*100;
 	}
 	
 
