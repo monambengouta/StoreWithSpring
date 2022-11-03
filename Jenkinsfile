@@ -272,7 +272,7 @@ def getReleaseVersion() {
     def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
     def versionNumber;
     if (gitCommit == null) {
-        versionNumber = env.1;
+        versionNumber = 1;
     } else {
         versionNumber = gitCommit.take(8);
     }
