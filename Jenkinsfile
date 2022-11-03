@@ -11,10 +11,10 @@ pipeline {
             steps {
                 // Run the maven build
                 script {
-                    // Get the Maven tool.
+                    // Get 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the Maven tool.
                     // ** NOTE: This 'M3' Maven tool must be configured
                     // **       in the global configuration.
-                    echo 'Pulling...' + env.master
+                    echo 'Pulling... master'
                     def mvnHome = tool 'Maven 3.6.0'
                     if (isUnix()) {
                         def targetVersion = getDevVersion()
@@ -258,7 +258,7 @@ def getDevVersion() {
     def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
     def versionNumber;
     if (gitCommit == null) {
-        versionNumber = env.1;
+        versionNumber = 1;
     } else {
         versionNumber = gitCommit.take(8);
     }
