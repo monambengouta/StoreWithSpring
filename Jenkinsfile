@@ -28,14 +28,14 @@ pipeline {
                         developmentArtifactVersion = "${pom.version}-${targetVersion}"
                         print pom.version
                         // execute the unit testing and collect the reports
-                        junit '**//*target/surefire-reports/TEST-*.xml'
-                        archive 'target*//*.jar'
+                        // junit '**//*target/surefire-reports/TEST-*.xml'
+                        // archive 'target*//*.jar'
                     } else {
                         bat(/"${mvnHome}\bin\mvn" -Dintegration-tests.skip=true clean package/)
                         def pom = readMavenPom file: 'pom.xml'
                         print pom.version
-                        junit '**//*target/surefire-reports/TEST-*.xml'
-                        archive 'target*//*.jar'
+                        // junit '**//*target/surefire-reports/TEST-*.xml'
+                        // archive 'target*//*.jar'
                     }
                 }
 
@@ -58,12 +58,16 @@ pipeline {
             // }
         // }
         stage('Sonar scan execution') {
-            // Run the sonar scan
-            steps {
-                script {
-                    sh 'mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=monaam1234'
-                }
-            }
+                    // Run the sonar scan
+                    steps {
+                        script {
+                            def mvnHome = tool 'Maven 3.5.2'
+                            withSonarQubeEnv {
+
+                                sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
+                            }
+                        }
+                    }
         }
         // waiting for sonar results based into the configured web hook in Sonar server which push the status back to jenkins
         stage('Sonar scan result check') {
@@ -207,22 +211,22 @@ pipeline {
             }
         }
     }
-    post {
+    // post {
         // Always runs. And it runs before any of the other post conditions.
-        always {
+        // always {
             // Let's wipe out the workspace before we finish!
-            deleteDir()
-        }
-        success {
-            sendEmail("Successful");
-        }
-        unstable {
-            sendEmail("Unstable");
-        }
-        failure {
-            sendEmail("Failed");
-        }
-    }
+            // deleteDir()
+        // }
+        // success {
+            // sendEmail("Successful");
+        // }
+        // unstable {
+            // sendEmail("Unstable");
+        // }
+        // failure {
+            // sendEmail("Failed");
+        // }
+    // }
 
 // The options directive is for configuration that applies to the whole job.
     options {
@@ -261,12 +265,12 @@ def getChangeString() {
     return changeString
 }
 
-def sendEmail(status) {
-    mail(
-            to: "$EMAIL_RECIPIENTS",
-            subject: "Build $BUILD_NUMBER - " + status + " (${currentBuild.fullDisplayName})",
-            body: "Changes:\n " + getChangeString() + "\n\n Check console output at: $BUILD_URL/console" + "\n")
-}
+// def sendEmail(status) {
+    // mail(
+            // to: "$EMAIL_RECIPIENTS",
+            // subject: "Build - " + status + " (${currentBuild.fullDisplayName})",
+            // body: "Changes:\n " + getChangeString() + "\n\n Check console output at: /console" + "\n")
+// }
 
 def getDevVersion() {
     def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
