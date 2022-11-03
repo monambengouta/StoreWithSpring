@@ -278,32 +278,3 @@ def getReleaseVersion() {
     }
     return pom.version.replace("-SNAPSHOT", ".${versionNumber}")
 }
-
-// if you want parallel execution , check below :
-/* stage('Quality Gate(Integration Tests and Sonar Scan)') {
-           // Run the maven build
-           steps {
-               parallel(
-                       IntegrationTest: {
-                           script {
-                               def mvnHome = tool 'Maven 3.5.2'
-                               if (isUnix()) {
-                                   sh "'${mvnHome}/bin/mvn'  verify -Dunit-tests.skip=true"
-                               } else {
-                                   bat(/"${mvnHome}\bin\mvn" verify -Dunit-tests.skip=true/)
-                               }
-                           }
-                       },
-                       SonarCheck: {
-                           script {
-                               def mvnHome = tool 'Maven 3.5.2'
-                               withSonarQubeEnv {
-                                   // sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dsonar.host.url=http://bicsjava.bc/sonar/ -Dmaven.test.failure.ignore=true"
-                                   sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dmaven.test.failure.ignore=true"
-                               }
-                           }
-                       },
-                       failFast: true)
-           }
-       }
-       */
