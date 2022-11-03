@@ -17,7 +17,7 @@ pipeline {
                     // ** NOTE: This 'M3' Maven tool must be configured
                     // **       in the global configuration.
                     echo 'Pulling... master'
-                    def mvnHome = tool 'Maven 3.3.0'
+                    def mvnHome = tool 'Maven 3.6.0'
                     if (isUnix()) {
                         def targetVersion = getDevVersion()
                         print 'target build version...'
@@ -41,32 +41,27 @@ pipeline {
 
             }
         }
-        stage('Integration tests') {
+        // stage('Integration tests') {
             // Run integration test
-            steps {
-                script {
-                    def mvnHome = tool 'Maven 3.6.0'
-                    if (isUnix()) {
+            // steps {
+                // script {
+                    // def mvnHome = tool 'Maven 3.6.0'
+                    // if (isUnix()) {
                         // just to trigger the integration test without unit testing
-                        sh "'${mvnHome}/bin/mvn'  verify -Dunit-tests.skip=true"
-                    } else {
-                        bat(/"${mvnHome}\bin\mvn" verify -Dunit-tests.skip=true/)
-                    }
-
-                }
+                        // sh "'${mvnHome}/bin/mvn'  verify -Dunit-tests.skip=true"
+                    // } else {
+                       //bat(/"${mvnHome}\bin\mvn" verify -Dunit-tests.skip=true/)
+                    // }
+                // }
                 // cucumber reports collection
                 cucumber buildStatus: null, fileIncludePattern: '**/cucumber.json', jsonReportDirectory: 'target', sortingMethod: 'ALPHABETICAL'
-            }
-        }
+            // }
+        // }
         stage('Sonar scan execution') {
             // Run the sonar scan
             steps {
                 script {
-                    def mvnHome = tool 'Maven 3.6.0'
-                    withSonarQubeEnv {
-
-                        sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
-                    }
+                    sh 'mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=monaam1234'
                 }
             }
         }
@@ -112,24 +107,24 @@ pipeline {
                 }
             }
         }
-        stage('DEV sanity check') {
-            steps {
+        // stage('DEV sanity check') {
+            // steps {
                 // give some time till the deployment is done, so we wait 45 seconds
-                sleep(45)
-                script {
-                    if (currentBuild.result == null || currentBuild.result == 'SUCCESS') {
-                        timeout(time: 1, unit: 'MINUTES') {
-                            script {
-                                def mvnHome = tool 'Maven 3.6.0'
-                                //NOTE : if u change the sanity test class name , change it here as well
-                                sh "'${mvnHome}/bin/mvn' -Dtest=ApplicationSanityCheck_ITT surefire:test"
-                            }
+                // sleep(45)
+                // script {
+                    // if (currentBuild.result == null || currentBuild.result == 'SUCCESS') {
+                        // timeout(time: 1, unit: 'MINUTES') {
+                            // script {
+                                // def mvnHome = tool 'Maven 3.6.0'
+                                // //NOTE : if u change the sanity test class name , change it here as well
+                                // sh "'${mvnHome}/bin/mvn' -Dtest=ApplicationSanityCheck_ITT surefire:test"
+                            // }
 
-                        }
-                    }
-                }
-            }
-        }
+                        // }
+                    // }
+                // }
+            // }
+        // }
         stage('Release and publish artifact') {
             when {
                 // check if branch is master
