@@ -279,4 +279,3 @@ def getReleaseVersion() {
     }
     return pom.version.replace("-SNAPSHOT", ".${versionNumber}")
 }
-}
