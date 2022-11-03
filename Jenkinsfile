@@ -64,25 +64,10 @@ pipeline {
                             def mvnHome = tool 'M2_HOME'
                             withSonarQubeEnv {
 
-                                sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true"
+                                sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true  -Dsonar.login=admin -Dsonar.password=monaam1234"
                             }
                         }
                     }
-        }
-        // waiting for sonar results based into the configured web hook in Sonar server which push the status back to jenkins
-        stage('Sonar scan result check') {
-            steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    retry(3) {
-                        script {
-                            def qg = waitForQualityGate()
-                            if (qg.status != 'OK') {
-                                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                            }
-                        }
-                    }
-                }
-            }
         }
         stage('Development deploy approval and deployment') {
             steps {
@@ -180,29 +165,6 @@ pipeline {
                                 echo 'the application is deployed !'
                             } else {
                                 error 'the application is not  deployed as released version is null!'
-                            }
-
-                        }
-                    }
-                }
-            }
-        }
-        stage('ACC E2E tests') {
-            when {
-                // check if branch is master
-                branch 'master'
-            }
-            steps {
-                // give some time till the deployment is done, so we wait 45 seconds
-                sleep(45)
-                script {
-                    if (currentBuild.result == null || currentBuild.result == 'SUCCESS') {
-                        timeout(time: 1, unit: 'MINUTES') {
-
-                            script {
-                                def mvnHome = tool 'M2_HOME'
-                                // NOTE : if you change the test class name change it here as well
-                                sh "'${mvnHome}/bin/mvn' -Dtest=ApplicationE2E surefire:test"
                             }
 
                         }
