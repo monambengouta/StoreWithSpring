@@ -222,9 +222,11 @@ pipeline {
     }
 
 }
+}
 def developmentArtifactVersion = ''
 def releasedVersion = ''
 // get change log to be send over the mail
+@NonCPS
 def getChangeString() {
     MAX_MSG_LEN = 100
     def changeString = ""
