@@ -225,7 +225,6 @@ pipeline {
 def developmentArtifactVersion = ''
 def releasedVersion = ''
 // get change log to be send over the mail
-@NonCPS
 def getChangeString() {
     MAX_MSG_LEN = 100
     def changeString = ""
@@ -277,5 +276,4 @@ def getReleaseVersion() {
         versionNumber = gitCommit.take(8);
     }
     return pom.version.replace("-SNAPSHOT", ".${versionNumber}")
-}
 }
