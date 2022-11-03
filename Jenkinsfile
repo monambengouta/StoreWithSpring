@@ -222,6 +222,7 @@ pipeline {
     }
 
 }
+}
 def developmentArtifactVersion = ''
 def releasedVersion = ''
 // get change log to be send over the mail
@@ -277,4 +278,5 @@ def getReleaseVersion() {
         versionNumber = gitCommit.take(8);
     }
     return pom.version.replace("-SNAPSHOT", ".${versionNumber}")
+}
 }
