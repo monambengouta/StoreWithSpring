@@ -81,6 +81,32 @@ pipeline {
                 }
             }
         }
+        stage('MVN SONARQUBE') {
+            steps {
+                withSonarQubeEnv(installationName: 'SonarQube Server', credentialsId: 'SonarQube Token') {
+                sh 'mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=monaam1234'
+                }
+                // sh "mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=Achref@99"
+            }
+        }
+
+        stage('Building our image') {
+            steps {
+                script {
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                }
+            }
+        }
+
+        stage('Deploy our image') {
+            steps {
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
     }
 }
 def developmentArtifactVersion = ''
