@@ -17,14 +17,14 @@ pipeline {
     }
     stages {
         stage('MVN CLEAN') {
-                 steps {
-                        sh "mvn clean"
-                 }
+            steps {
+                sh "mvn clean"
+            }
         }
         stage('MVN COMPILE') {
-                 steps {
-                     sh "mvn compile"
-                 }
+            steps {
+                sh "mvn compile"
+            }
         }
         stage('Build with unit testing') {
             steps {
