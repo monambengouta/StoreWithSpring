@@ -44,7 +44,7 @@ pipeline {
                         // archive 'target*//*.jar'
                     }
                 }
-    }
+            }
         stage("Publish to Nexus Repository Manager") {
                     steps {
                         script {
@@ -80,4 +80,5 @@ pipeline {
                         }
                     }
         }
+    }
 }
