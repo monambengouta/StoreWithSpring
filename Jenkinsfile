@@ -16,16 +16,6 @@ pipeline {
         NEXUS_CREDENTIAL_ID = "nexus-user-credentials"
     }
     stages {
-        stage('MVN CLEAN') {
-            steps {
-                sh "mvn clean"
-            }
-        }
-        stage('MVN COMPILE') {
-            steps {
-                sh "mvn compile"
-            }
-        }
         stage('Build with unit testing') {
             steps {
                 // Run the maven build
@@ -106,7 +96,7 @@ pipeline {
                         }
                     }
         }
-
+    }
     // post {
         // Always runs. And it runs before any of the other post conditions.
         // always {
