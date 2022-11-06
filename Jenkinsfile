@@ -123,7 +123,7 @@ pipeline {
             // sendEmail("Failed");
         // }
     // }
-
+    }
 // The options directive is for configuration that applies to the whole job.
     options {
         // For example, we'd like to make sure we only keep 10 builds at a time, so
