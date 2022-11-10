@@ -81,12 +81,16 @@ pipeline {
                 }
             }
         }
-        stage('MVN SONARQUBE') {
+        stage('Sonar scan execution') {
+            // Run the sonar scan
             steps {
-                withSonarQubeEnv(installationName: 'SonarQube Server', credentialsId: 'SonarQube Token') {
-                sh 'mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=monaam1234'
+                script {
+                    def mvnHome = tool 'M2_HOME'
+                    withSonarQubeEnv {
+
+                        sh "'${mvnHome}/bin/mvn'  verify sonar:sonar -Dintegration-tests.skip=true -Dmaven.test.failure.ignore=true  -Dsonar.login=admin -Dsonar.password=monaam1234"
+                    }
                 }
-                // sh "mvn sonar:sonar -Dsonar.login=admin -Dsonar.password=Achref@99"
             }
         }
 
@@ -108,6 +112,22 @@ pipeline {
             }
         }
     }
+    post {
+            // Always runs. And it runs before any of the other post conditions.
+            always {
+                // Let's wipe out the workspace before we finish!
+                deleteDir()
+            }
+            success {
+                sendEmail("Successful");
+            }
+            unstable {
+                sendEmail("Unstable");
+            }
+            failure {
+                sendEmail("Failed");
+            }
+        }
 }
 def developmentArtifactVersion = ''
 def releasedVersion = ''
@@ -134,12 +154,12 @@ def getChangeString() {
     return changeString
 }
 
-// def sendEmail(status) {
-    // mail(
-            // to: "$EMAIL_RECIPIENTS",
-            // subject: "Build - " + status + " (${currentBuild.fullDisplayName})",
-            // body: "Changes:\n " + getChangeString() + "\n\n Check console output at: /console" + "\n")
-// }
+def sendEmail(status) {
+    mail(
+            to: "$EMAIL_RECIPIENTS",
+            subject: "Build - " + status + " (${currentBuild.fullDisplayName})",
+            body: "Changes:\n " + getChangeString() + "\n\n Check console output at: /console" + "\n")
+}
 
 def getDevVersion() {
     def gitCommit = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
