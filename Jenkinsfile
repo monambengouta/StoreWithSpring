@@ -5,7 +5,7 @@ pipeline {
     environment {
         EMAIL_RECIPIENTS = 'monaam.bengouta@gmail.com'
         registry = "monambengouta/storewithspring"
-        registryCredential = ''
+        registryCredential = '	dockerhub'
         dockerImage = ''
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
