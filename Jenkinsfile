@@ -111,6 +111,11 @@ pipeline {
                 }
             }
         }
+        stage('docker compose run ') {
+            steps {
+                sh 'docker-compose up -d '
+            }
+        }
     }
     post {
             // Always runs. And it runs before any of the other post conditions.
